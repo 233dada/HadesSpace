@@ -2521,3 +2521,6 @@
 "TID_LOCAL_CHAT_ADD_FRIEND_INFO","Добавьте этого игрока в свой список друзей Hades' Star, чтобы использовать этот чат."
 "TID_GENERIC_INELIGIBLE","Вы не имеете права играть в эту игру."
 "TID_WELCOME_TO_DN_BLOCKING","Добро пожаловать в Hades' Star: DARK NEBULA! Пожалуйста, откройте свой почтовый ящик для получения важных сообщений."
+"TID_BLS_BATTLESHIP_HUD_SETTING","HUD линкора (BLS)"
+"TID_RS_BATTLESHIP_HUD_SETTING","HUD линкора (RS)"
+"TID_DRS_BATTLESHIP_HUD_SETTING","HUD линкора (DRS)"

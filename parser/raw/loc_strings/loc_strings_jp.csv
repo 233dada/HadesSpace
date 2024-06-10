@@ -2521,3 +2521,6 @@
 "TID_LOCAL_CHAT_ADD_FRIEND_INFO","このプレイヤーをあなたのHades' Starフレンドリストに追加して、このチャットを使用してください。"
 "TID_GENERIC_INELIGIBLE","このゲームをプレイする資格がありません。"
 "TID_WELCOME_TO_DN_BLOCKING","Hades' Star: DARK NEBULAへようこそ！ 重要なメッセージを受信するためにメールボックスを開いてください。"
+"TID_BLS_BATTLESHIP_HUD_SETTING","戦艦HUD（BLS）"
+"TID_RS_BATTLESHIP_HUD_SETTING","戦艦HUD（RS）"
+"TID_DRS_BATTLESHIP_HUD_SETTING","戦艦HUD（DRS）"
