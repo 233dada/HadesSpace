@@ -8,6 +8,9 @@ on:
   #schedule:
     #- cron: '0 14 * * *'
 
+permissions:
+  contents: write
+
 jobs:
   merge-upstream:
     runs-on: ubuntu-latest
