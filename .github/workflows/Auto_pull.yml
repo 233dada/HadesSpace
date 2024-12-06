@@ -8,10 +8,8 @@ on:
   #schedule:
     #- cron: '0 14 * * *'
 
-permissions:
-  contents: write
-
-
+#permissions:
+ # contents: write
 
 jobs:
   sync:
