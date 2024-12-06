@@ -8,6 +8,9 @@ on:
   #schedule:
     #- cron: '0 14 * * *'
 
+permissions:
+  contents: write
+
 jobs:
   merge-upstream:
     runs-on: ubuntu-latest
@@ -15,11 +18,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          ref: master             # set the branch to merge to
+          ref: master-auto             # set the branch to merge to
           fetch-depth: 0 
       - name: Merge Upstream
         uses: exions/merge-upstream@v1
         with:
           upstream: userXinos/HadesSpace      # set the upstream repo
           upstream-branch: master   # set the upstream branch to merge from
-          branch: master          # set the branch to merge to
+          branch: master-auto          # set the branch to merge to
