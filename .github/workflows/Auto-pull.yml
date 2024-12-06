@@ -5,8 +5,8 @@ on:
     #branches:
      # - master
   workflow_dispatch: # on button click
-  #schedule:
-    #- cron: '0 14 * * *'
+  schedule:
+    - cron: '0 14 * * *'
 
 #permissions:
  # contents: write
@@ -20,6 +20,6 @@ jobs:
       - uses: tgymnich/fork-sync@v1.8
         with:
           owner: userXinos
-          base: master-auto
+          base: master
           head: master
           merge_method: rebase
