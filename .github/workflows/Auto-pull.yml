@@ -1,12 +1,15 @@
 name: Sync Fork
 
+env:
+  tz: Asia/Shanghai
+
 on:
   #push:
     #branches:
      # - master
   workflow_dispatch: # on button click
   schedule:
-    - cron: '0 14 * * *'
+    - cron: '0 0 */3 * *'   # 每3天的凌晨0点
 
 #permissions:
  # contents: write
