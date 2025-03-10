@@ -1,0 +1,38 @@
+name: Sync Upstream
+
+env:
+  tz: Asia/Shanghai
+
+on:
+  schedule:
+    - cron: '0 0 */3 * *' # 每3天的凌晨0点
+  workflow_dispatch:    # 支持手动触发
+
+permissions:
+    contents: write
+    actions: write
+jobs:
+  SyncUpstream:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: 初始化
+        run: |
+            git config --global user.name "GitHub Action"
+            git config --global user.email "action@github.com"
+            git remote add upstream https://github.com/userXinos/HadesSpace.git
+            git fetch upstream
+            
+      - name: 同步上游到master
+        run: |
+          git checkout master
+          git reset --hard upstream/master
+          git push --force origin master
+      - name: 创建合并
+        run: |
+            git checkout master
+            git merge --no-ff origin/edit
+            git push origin master
