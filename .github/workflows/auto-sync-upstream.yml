@@ -6,11 +6,17 @@ env:
 on:
   schedule:
     - cron: '0 0 */3 * *' # 每3天的凌晨0点
-  workflow_dispatch:    # 支持手动触发
+  workflow_dispatch:
+    inputs:
+        force_sync:
+          description: '是否强制同步'
+          required: false
+          default: 'false'
 
 permissions:
     contents: write
     actions: write
+    pull-requests: read
 jobs:
   SyncUpstream:
     runs-on: ubuntu-latest
@@ -25,33 +31,55 @@ jobs:
             git config --global user.name "GitHub Action"
             git config --global user.email "action@github.com"
             git remote add upstream https://github.com/userXinos/HadesSpace.git
-
-      - name: 检测新提交
-        id: Check_upstream
-        run: |
-          git fetch upstream master
-          LOCAL_HASH=$(git rev-parse master)
-          UPSTREAM_HASH=$(git rev-parse upstream/master)
-
-          if [ "$LOCAL_HASH" != "$UPSTREAM_HASH" ]; then
-            echo "发现新提交！最新哈希：$UPSTREAM_HASH"
-            echo "has_update=true" >> $GITHUB_OUTPUT
-          else
-            echo "无新提交"
-            echo "has_update=false" >> $GITHUB_OUTPUT
-          fi
+            git fetch upstream
             
+      - name: 获取远程仓库最新提交时间
+        id: get_remote_commit
+        run: |
+          REMOTE_DATE=$(git log -1 --format=%cd --date=iso origin/master)
+          REMOTE_TS=$(date -d "$REMOTE_DATE" +%s)
+          echo "远程仓库最新提交时间：$REMOTE_DATE"
+          echo "remote_ts=$REMOTE_TS" >> $GITHUB_OUTPUT
+
+      - name: 获取上游仓库最新提交时间
+        id: get_upstream_commit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          UPSTREAM_RESPONSE=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            https://api.github.com/repos/userXinos/HadesSpace/commits/master)
+          UPSTREAM_DATE=$(echo "$UPSTREAM_RESPONSE" | jq -r '.commit.committer.date')
+          UPSTREAM_TS=$(date -d "$UPSTREAM_DATE" +%s)
+
+          echo "上游仓库最新提交时间：$UPSTREAM_DATE"
+          echo "upstream_ts=$UPSTREAM_TS" >> $GITHUB_OUTPUT
+
+      - name: 比较提交时间
+        id: compare_timestamps
+        run: |
+          if [ ${{ steps.get_upstream_commit.outputs.upstream_ts }} -gt ${{ steps.get_remote_commit.outputs.remote_ts }} ]; then
+            echo "上游仓库有更新，需要同步。"
+            echo "needs_sync=true" >> $GITHUB_OUTPUT
+          else
+            echo "上游仓库无更新，无需同步。"
+            echo "needs_sync=false" >> $GITHUB_OUTPUT
+          fi
+        
       - name: 同步上游到master
-        if: steps.check_upstream.outputs.has_update == 'true'
+        if: steps.compare_timestamps.outputs.needs_sync == 'true' || github.event.inputs.force_sync == 'true'
         id: Sync
         run: |
           git checkout master
           git reset --hard upstream/master
           git push --force origin master
-      - name: 创建合并
-        if: steps.check_upstream.outputs.has_update == 'true'
+      - name: 创建合并  
+        if: steps.compare_timestamps.outputs.needs_sync == 'true' || github.event.inputs.force_sync == 'true'
         id: Merge
         run: |
             git checkout master
             git merge --no-ff origin/edit
             git push origin master
+
+      - name: 停止更新
+        if: steps.compare_timestamps.outputs.needs_sync != 'false' || github.event.inputs.force_sync == 'false'
+        run: echo "当前已是最新状态，无需同步。"
