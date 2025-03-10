@@ -1,0 +1,44 @@
+name: Sync Upstream
+
+env:
+  tz: Asia/Shanghai
+
+on:
+  schedule:
+    - cron: '0 0 */3 * *' # 每3天的凌晨0点
+  workflow_dispatch:    # 支持手动触发
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 同步上游到master
+        run: |
+          git remote add upstream https://github.com/userXinos/HadesSpace.git
+          git fetch upstream
+          git checkout master
+          git reset --hard upstream/master
+          git push --force origin master
+
+      - name: 创建合并PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} 
+          title: "每日自动合并更新 [$(date +'%Y-%m-%d')]"
+          branch: auto-merge/$(date +%s)
+          base: master
+          head: local-merge-source
+          body: |
+            ## 自动合并策略
+            - 使用 `-X ours` 合并策略
+            - 保留 .github/workflows 目录
+          commit-message: "chore: 自动合并更新"
+          delete-branch: true
