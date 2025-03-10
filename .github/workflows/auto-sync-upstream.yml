@@ -20,18 +20,37 @@ jobs:
           fetch-depth: 0
           
       - name: 初始化
+        id: Init
         run: |
             git config --global user.name "GitHub Action"
             git config --global user.email "action@github.com"
             git remote add upstream https://github.com/userXinos/HadesSpace.git
-            git fetch upstream
+
+      - name: 检测新提交
+        id: Check_upstream
+        run: |
+          git fetch upstream master
+          LOCAL_HASH=$(git rev-parse master)
+          UPSTREAM_HASH=$(git rev-parse upstream/master)
+
+          if [ "$LOCAL_HASH" != "$UPSTREAM_HASH" ]; then
+            echo "发现新提交！最新哈希：$UPSTREAM_HASH"
+            echo "has_update=true" >> $GITHUB_OUTPUT
+          else
+            echo "无新提交"
+            echo "has_update=false" >> $GITHUB_OUTPUT
+          fi
             
       - name: 同步上游到master
+        if: steps.check_upstream.outputs.has_update == 'true'
+        id: Sync
         run: |
           git checkout master
           git reset --hard upstream/master
           git push --force origin master
       - name: 创建合并
+        if: steps.check_upstream.outputs.has_update == 'true'
+        id: Merge
         run: |
             git checkout master
             git merge --no-ff origin/edit
