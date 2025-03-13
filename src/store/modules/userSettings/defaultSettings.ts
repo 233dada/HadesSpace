@@ -3,13 +3,13 @@ function extractLangs(data: any): string[]{
     return Object.values(data).map((locale: any) => locale.Code);
 };
 const langList = extractLangs(langData);
-if(navigator.language === 'zh-CN')
+if(navigator.language.startsWith('zh'))
     {
         var lan = 'zh-si'
     }else{
         var lan = navigator.language
     };
-if(langList.includes(lan)){}else{
+if(!langList.includes(lan)){
     var lan = 'en'
 };
 export default Object.freeze(<Settings>{
