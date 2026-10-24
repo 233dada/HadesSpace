@@ -159,6 +159,48 @@ export default [
         ['TID', 'TID2', 'TID_Description', 'DNDiff'],
         (v) => !Array.isArray(v) ? t(v) : undefined,
     ],
+
+    // Quantum (Light/Dark) module variants
+    [
+        ['DroneExtraModule'],
+        (v) => t(locKeys[v] || v),
+    ],
+    [
+        [
+            'EquipHPBoostPct',
+            'EnemyShieldReductionPct',
+            'UnityPct',
+            'ActiveWRangeIncrPct',
+            'ShipmentCloneVal',
+            'ShipYieldImprovementPct',
+            'MaxSectorHullHealPct',
+            'MaxSectorHullDmgPct',
+            'RocketHPBoostPct',
+            'ProjectileSpeedIncrPct',
+            'DeltaSpeedIncr',
+            'DeltaDamageIncr',
+            'CROIDBoostPct',
+            'SectorHydroBlastYieldPct',
+        ],
+        (v) => `${v}%`,
+    ],
+    [
+        ['ActiveDuration', 'Cooldown', 'GCD', 'Gdur', 'QEffectDurationF'],
+        (v) => Array.isArray(v) ? v.map((e) => sec2str(e)).join(', ') : sec2str(v),
+    ],
+    [
+        ['DisableShieldTicks'],
+        (v) => {
+            const toTime = (ticks) => sec2str(ticks / globals.TicksPerSecond);
+            return Array.isArray(v) ? v.map(toTime).join(', ') : toTime(v);
+        },
+    ],
+    [
+        ['ExtraProjectileStrengths'],
+        (v) => Array.isArray(v) ?
+            v.map((e) => Array.isArray(e) ? e.join(' / ') : e).join(' / ') :
+            v,
+    ],
     [
         ['BaseType'],
         (v) => v ? `${v.NumBases} ${t(v.TID)}` : '',

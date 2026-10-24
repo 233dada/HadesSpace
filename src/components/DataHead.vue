@@ -5,11 +5,15 @@
         :items="data.default"
         :format="format"
         :icon-dir="iconDir"
+        :variants="variants"
+        :active-variant-id="activeVariantId"
+        :variant="variant"
+        @toggle-variant="emit('toggle-variant', $event)"
       />
     </div>
 
     <div
-      v-if="Object.keys(other).length"
+      v-if="!variant && Object.keys(other).length"
       class="other"
     >
       <stats
@@ -27,14 +31,19 @@
 import { computed } from 'vue';
 
 import Stats from '@/components/DataHeadStats.vue';
+import type { ModuleVariant } from '@Utils/moduleVariants';
 
 export interface Props {
     data: {[k: string]: unknown, default: unknown},
     format: {value: (k: string, v: unknown) => unknown, key: (k: string) => string}
     iconDir: string
+    variants?: ModuleVariant[] | null
+    activeVariantId?: string | null
+    variant?: ModuleVariant | null
 }
 
 const props = defineProps<Props>();
+const emit = defineEmits<{(e: 'toggle-variant', id: string): void}>();
 const other = computed(() => {
     const res = { ...props.data };
     delete res.default;

@@ -18,11 +18,17 @@
                   class="title"
                 >
                   <a :href="parentId ? `#${parentId}-${name}` : `#${item.Name}`">
-                    {{ format.key(item.TID || name) }}
+                    {{ activeVariant ? t(activeVariant.titleLocKey, [format.key(item.TID || name)]) : format.key(item.TID || name) }}
                   </a>
                 </div>
                 <p
-                  v-if="item.TID_Description && (parent?.TID_Description ? parent.TID_Description !== item.TID_Description : true) && $te(item.TID_Description)"
+                  v-if="activeVariant"
+                  class="description"
+                >
+                  {{ formatDescr(activeVariant.descriptionKey) }}<template v-if="$store.state.userSettings.showKeys"> ({{ activeVariant.descriptionKey }})</template>
+                </p>
+                <p
+                  v-else-if="item.TID_Description && (parent?.TID_Description ? parent.TID_Description !== item.TID_Description : true) && $te(item.TID_Description)"
                   class="description"
                 >
                   {{ formatDescr(item.TID_Description) }}
@@ -36,6 +42,24 @@
                   :name="item.PrefabModel || item.Icon || item.Model"
                   :dir="iconDir || ICON_DIR_LIST[name] || ICON_DIR_LIST.default"
                 />
+                <div
+                  v-if="variants && variants.length"
+                  class="variant-switch"
+                >
+                  <button
+                    v-for="variantOption in variants"
+                    :key="variantOption.id"
+                    type="button"
+                    class="variant-btn"
+                    :class="[variantOption.id, {active: activeVariantId === variantOption.id}]"
+                    :title="t(variantOption.titleLocKey, [format.key(item.TID || name)])"
+                    :aria-label="t(variantOption.titleLocKey, [format.key(item.TID || name)])"
+                    :aria-pressed="activeVariantId === variantOption.id"
+                    @click.stop="emit('toggle-variant', variantOption.id)"
+                  >
+                    {{ variantOption.id === 'light' ? 'L' : 'D' }}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -43,7 +67,7 @@
               {{ format.value(name, item) }}
             </template>
             <ul
-              v-else
+              v-else-if="!activeVariant"
               class="characteristics"
             >
               <li
@@ -66,6 +90,27 @@
                   :items="value"
                   :format="format"
                 />
+              </li>
+            </ul>
+            <ul
+              v-else-if="variantCharacteristics.length"
+              class="characteristics variant-characteristics"
+            >
+              <li
+                v-for="{ key, value, filtered } in variantCharacteristics"
+                :key="key"
+                :class="{filtered}"
+                class="line"
+              >
+                <b>
+                  <DataStatTooltip :k="key">
+                    {{ format.key(key) }}
+                  </DataStatTooltip>
+                </b><template v-if="$store.state.userSettings.showKeys"> ({{ key }})</template>:
+                <span
+                  :class="statsStyleName(key)"
+                  class="value stats-style"
+                >{{ format.value(key, value) }}</span>
               </li>
             </ul>
           </div>
@@ -178,6 +223,7 @@ import DataStatByStar from '@/components/DataStatByStar.vue';
 import { useI18n } from 'vue-i18n';
 
 import statsStyleName from '@Handlers/statsStyleName';
+import type { ModuleVariant } from '@Utils/moduleVariants';
 
 export interface Props {
     items: unknown[] | unknown | { [k:string]: object|unknown[] },
@@ -186,6 +232,9 @@ export interface Props {
     parentId?: string|null
     parent?: {[k: string]: unknown, TID?: string, TID_Description?: string}
     iconDir?: string
+    variants?: ModuleVariant[]|null
+    activeVariantId?: string|null
+    variant?: ModuleVariant|null
 }
 
 const ICON_DIR_LIST = {
@@ -200,6 +249,28 @@ const props = withDefaults(defineProps<Props>(), {
     parentId: null,
     parent: () => ({ ID_Description: null }),
     iconDir: '',
+    variants: null,
+    activeVariantId: null,
+    variant: null,
+});
+const emit = defineEmits<{(e: 'toggle-variant', id: string): void}>();
+const activeVariant = computed(() => props.variant);
+const variantCharacteristics = computed(() => {
+    const variant = activeVariant.value;
+    if (!variant) {
+        return [];
+    }
+
+    const scalars: Record<string, unknown> = { Name: variant.data.Name };
+
+    variant.fields.forEach((key) => {
+        if (!Array.isArray(variant.data[key])) {
+            scalars[key] = variant.data[key];
+        }
+    });
+
+    return Object.entries(getCharacteristics(scalars))
+        .map(([key, [value, filtered]]) => ({ key, value, filtered }));
 });
 const itemsToArray = computed(() => {
     if (Array.isArray(props.items)) {
@@ -294,10 +365,53 @@ $mw: 900px;
                     @media screen and (max-width: $mw) {
                         max-width: none;
                     }
+
+                    .variant-switch {
+                        display: flex;
+                        justify-content: center;
+                        gap: 5px;
+                        margin-top: 6px;
+
+                        .variant-btn {
+                            width: 18px;
+                            height: 18px;
+                            padding: 0;
+                            border: 1px solid #ccd7de;
+                            border-radius: 3px;
+                            font: inherit;
+                            font-size: 11px;
+                            line-height: 1;
+                            cursor: pointer;
+                            transition: transform 0.15s, box-shadow 0.15s;
+
+                            &.light {
+                                background: #fff;
+                                color: #161b1d;
+                            }
+
+                            &.dark {
+                                background: #101719;
+                                color: #fff;
+                            }
+
+                            &:hover,
+                            &.active {
+                                transform: scale(1.12);
+                            }
+
+                            &.active {
+                                box-shadow: 0 0 0 2px #4c7885;
+                            }
+                        }
+                    }
                 }
             }
             .characteristics {
                 list-style-type: none;
+
+                &.variant-characteristics .line b {
+                    color: #9fb4be;
+                }
 
                 .line {
                     font-size: 100%;
