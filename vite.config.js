@@ -10,8 +10,10 @@ const path = (...p) => resolve(__dirname, ...p);
 const isDev = process.env.NODE_ENV === 'development';
 const currentDate = new Date();
 
+const base = process.env.VERCEL ? '/' : '/HadesSpace/';
+
 export default defineConfig({
-    base = process.env.VERCEL ? '/' : '/HadesSpace/';
+    base,
     // base: './',
     server: {
         port: 8080,
